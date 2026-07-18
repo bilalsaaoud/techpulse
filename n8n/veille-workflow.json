@@ -1,0 +1,54 @@
+{
+  "name": "Veille tech automatisée",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "hours", "hoursInterval": 6 }] } },
+      "name": "Toutes les 6h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": { "url": "https://hnrss.org/frontpage", "options": {} },
+      "name": "RSS Hacker News",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [220, -100]
+    },
+    {
+      "parameters": { "url": "https://dev.to/feed", "options": {} },
+      "name": "RSS dev.to",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [220, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api:3002/api/articles",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "title", "value": "={{ $json.title }}" },
+            { "name": "url", "value": "={{ $json.link }}" },
+            { "name": "source", "value": "={{ $json.link.split('/')[2] }}" },
+            { "name": "publishedAt", "value": "={{ $json.pubDate }}" }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Envoyer vers l'API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 0]
+    }
+  ],
+  "connections": {
+    "Toutes les 6h": { "main": [[
+      { "node": "RSS Hacker News", "type": "main", "index": 0 },
+      { "node": "RSS dev.to", "type": "main", "index": 0 }
+    ]] },
+    "RSS Hacker News": { "main": [[{ "node": "Envoyer vers l'API", "type": "main", "index": 0 }]] },
+    "RSS dev.to": { "main": [[{ "node": "Envoyer vers l'API", "type": "main", "index": 0 }]] }
+  }
+}

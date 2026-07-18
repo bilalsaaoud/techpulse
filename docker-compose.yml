@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: techpulse
+      POSTGRES_PASSWORD: postgres
+    volumes: [pgdata:/var/lib/postgresql/data]
+
+  api:
+    build: ./api
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/techpulse
+    ports: ["3002:3002"]
+    depends_on: [db]
+
+  client:
+    build: ./client
+    ports: ["5173:5173"]
+    environment:
+      VITE_API_URL: http://localhost:3002
+    depends_on: [api]
+
+  n8n:
+    image: n8nio/n8n:latest
+    ports: ["5678:5678"]
+    environment:
+      GENERIC_TIMEZONE: Europe/Paris
+    volumes: [n8n_data:/home/node/.n8n]
+    depends_on: [api]
+
+volumes:
+  pgdata:
+  n8n_data:
